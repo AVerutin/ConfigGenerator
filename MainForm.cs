@@ -57,6 +57,8 @@ namespace ConfigGenerator
             // Привязка событий выбора элементов из списка
             threadsList.SelectedValueChanged += ThreadsList_SelectedValueChanged;
             rollgangList.SelectedValueChanged += RollgangList_SelectedValueChanged;
+            labelList.SelectedValueChanged += LabelList_SelectedValueChanged;
+            signalsList.SelectedValueChanged += SignalName_SelectedValueChanged; 
 
             // Обновление компонентов на форме
             ResetForm();
@@ -67,10 +69,10 @@ namespace ConfigGenerator
         {
             UpdateCommonParameters();
             UpdateThreadsList();
-            // UpdateDataBlockList();
-            //UpdateMillConfigView();
-            //UpdateSubscriptions();
-            //UpdateSignalsList();
+            UpdateLabelsView();
+            UpdateRollgangsView();
+            UpdateSignalsView();
+            // UpdateSignalsList();
         }
 
         /// <summary>
@@ -197,7 +199,6 @@ namespace ConfigGenerator
         }
 
         #endregion
-
 
         #region Обработка меню Конфигурация
 
@@ -581,7 +582,6 @@ namespace ConfigGenerator
             {
                 // Список нитей пуст, очищаем элементы формы
                 textThreadDirection.Text = "";
-                textThreadName.Text = "";
                 textThreadNumber.Text = "";
                 textThreadUid.Text = "";
                 textThreadStart.Text = "";
@@ -594,7 +594,58 @@ namespace ConfigGenerator
             }
         }
 
+        /// <summary>
+        /// Обновление блока Метки на форме
+        /// </summary>
+        private void UpdateLabelsView()
+        {
+            labelList.Items.Clear();
 
+            if (_threadNumber > 0)
+            {
+                // Получим список рольгангов на производственной нити
+                foreach(ProductionThread thread in _productionThreadsList)
+                {
+                    if(thread.ThreadNumber == _threadNumber)
+                    {
+                        // Нашли выбранную нить. Выбираем рольганги на выбранной нити
+                        foreach(LabelUnit label in thread.ListLabelUnits)
+                        {
+                            labelList.Items.Add(label.Text);
+                        }
+                        
+                    }
+                }
+
+                if (labelList.Items.Count > 0)
+                {
+                    labelList.SelectedIndex = 0;
+                    labelAdd.Enabled = true;
+                    labelEdit.Enabled = true;
+                    labelDelete.Enabled = true;
+                }
+                else
+                {
+                    labelPos.Text = "[0:0]";
+                    labelThread.Text = "0";
+
+                    labelAdd.Enabled = false;
+                    labelEdit.Enabled = false;
+                    labelDelete.Enabled = false;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Обновление блока Сигналы на форме
+        /// </summary>
+        private void UpdateSignalsView()
+        {
+            signalsList.Items.Clear();
+            
+            //TODO: Выполнить поиск сигналов на основании идентификатора выбранного блока данных
+        }
+        
         /// <summary>
         /// Обновление списка рольгангов на нити
         /// </summary>
@@ -622,6 +673,7 @@ namespace ConfigGenerator
                 if (rollgangList.Items.Count > 0)
                 {
                     rollgangList.SelectedIndex = 0;
+                    rollgangAdd.Enabled = true;
                     rollgangEdit.Enabled = true;
                     rollgangDelete.Enabled = true;
                 }
@@ -633,6 +685,7 @@ namespace ConfigGenerator
                     rollgangSignalSpeed.Text = "0";
                     rollgangSpeedValue.Text = "0";
 
+                    rollgangAdd.Enabled = false;
                     rollgangEdit.Enabled = false;
                     rollgangDelete.Enabled = false;
                 }
@@ -679,11 +732,11 @@ namespace ConfigGenerator
         }
 
 
-        /// <summary>
-        /// Обзор списка имеющихся производственных линий 
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
+        // /// <summary>
+        // /// Обзор списка имеющихся производственных линий 
+        // /// </summary>
+        // /// <param name="sender"></param>
+        // /// <param name="e"></param>
         //private void browseThreadToolStripMenuItem_Click(object sender, EventArgs e)
         //{
         //    BrowseThreads browseThreads = new BrowseThreads();
@@ -726,9 +779,8 @@ namespace ConfigGenerator
             ThreadUnit thread = _configuration.FindThreadByName(threadsList.Text);
             textThreadUid.Text = thread.Uid.ToString();
             textThreadNumber.Text = thread.ThreadNumber.ToString();
-            textThreadName.Text = thread.Name;
-            textThreadStart.Text = "[" + thread.StartPos.PosX + ":" + thread.StartPos.PosY + "]";
-            textThreadFinish.Text = "[" + thread.FinishPos.PosX + ":" + thread.FinishPos.PosY + "]";
+            textThreadStart.Text = $"[{thread.StartPos.PosX}:{thread.StartPos.PosY}]";
+            textThreadFinish.Text = $"[{thread.FinishPos.PosX}:{thread.FinishPos.PosY}]";
             textThreadDirection.Text = thread.Direction == ThreadDirection.Horizontal ? "Горизонтально" : "Вертикально";
             checkThreadStopAtEnds.Checked = thread.StopOnEnds;
 
@@ -739,6 +791,7 @@ namespace ConfigGenerator
 
             // UpdateSignalsList(thread.ThreadNumber);
             UpdateRollgangsView();
+            UpdateLabelsView();
         }
 
         /// <summary>
@@ -753,9 +806,43 @@ namespace ConfigGenerator
             rollgangStart.Text = "[" + rollgang.StartPos.PosX + ":" + rollgang.StartPos.PosY + "]";
             rollgangFinish.Text = "[" + rollgang.FinishPos.PosX + ":" + rollgang.FinishPos.PosY + "]";
             rollgangSignalSpeed.Text = rollgang.SignalSpeed.ToString();
-            rollgangSpeedValue.Text = rollgang.SpeedValue.ToString();
+            rollgangSpeedValue.Text = rollgang.SpeedValue.ToString("F1");
 
             _statusBarMessage = $"Выбран рольганг: [{rollgang.Uid}] {rollgang.Name}";
+            StatusText.Text = _statusBarMessage;
+        }
+
+        /// <summary>
+        /// Обработка события выбора метки из списка
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void LabelList_SelectedValueChanged(object sender, EventArgs e)
+        {
+            LabelUnit label = _configuration.FindLabel(labelList.Text);
+            labelThread.Text = label.ThreadNumber.ToString();
+            labelPos.Text = $"[{label.Position.PosX}:{label.Position.PosY}]";
+
+            _statusBarMessage = $"Выбрана метка: [{label.Text}]";
+            StatusText.Text = _statusBarMessage;
+        }
+
+        /// <summary>
+        /// Обработка события выбора сигнала из списка
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void SignalName_SelectedValueChanged(object sender, EventArgs e)
+        {
+            SignalUnit signal = _configuration.FindSignal(signalsList.Text);
+            signalUid.Text = signal.Uid.ToString();
+            signalType.Text = signal.Type.ToString();
+            signalDataBlock.Text = _configuration.FindDataBlock(signal.DataBlockUid).Name;
+            signalByte.Text = signal.Byte.ToString();
+            signalVirtValue.Text = signal.VirtualValue.ToString("F1");
+            signalCompound.Text = signal.CompoundSignal.ToString();
+
+            _statusBarMessage = $"Выбран сигнал: [{signal.Uid}] {signal.Name}";
             StatusText.Text = _statusBarMessage;
         }
 

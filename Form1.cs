@@ -69,7 +69,7 @@ namespace ConfigGenerator
                 view.Uid = signal.Uid.ToString();
                 view.Name = signal.Name;
                 view.Type = signal.Type.ToString();
-                DataBlockUnit dataBlock = _configuration.FindDataBlockByUid(signal.DataBlockUid);
+                DataBlockUnit dataBlock = _configuration.FindDataBlock(signal.DataBlockUid);
                 string dbName = "";
                 if (dataBlock != null)
                 {
@@ -634,7 +634,7 @@ namespace ConfigGenerator
                 uid = int.Parse(dataBlocks.CurrentRow.Cells[0].Value.ToString() ?? "0");
             }
 
-            DataBlockUnit dataBlock = _configuration.FindDataBlockByUid(uid);
+            DataBlockUnit dataBlock = _configuration.FindDataBlock(uid);
             addDataBlock.Mode = FormMode.Edit;
             addDataBlock.DataBlock = dataBlock;
             
