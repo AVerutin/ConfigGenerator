@@ -38,6 +38,7 @@ namespace ConfigGenerator.Forms
             DataBlock.Reversal = checkReversal.Checked;
             DataBlock.HasHead = checkHeader.Checked;
             DataBlock.ServerName = textServer.Text;
+            DataBlock.ServerPath = textPath.Text;
 
             switch (comboType.Text)
             {

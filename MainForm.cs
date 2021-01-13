@@ -1,7 +1,6 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using NLog;
@@ -17,9 +16,9 @@ namespace ConfigGenerator
 {
     public partial class MainForm : Form
     {
-        private bool _modified;
         private string _cfgFileName;
-        private Logger _logger;
+        private readonly Logger _logger;
+        private bool _modified;
         private string _statusBarMessage = "Готово.";
         private Parser _configuration;
         private List<ProductionThread> _productionThreadsList;
@@ -53,17 +52,38 @@ namespace ConfigGenerator
             TrackThread.Click += AddThread_Click;
             TrackSignal.Click += AddSignal_Click;
             TrackIngot.Click += AddIngotParam_Click;
+            
+            // Привязка обработчиков событий для нажатий на кнопки
+            threadAdd.Click += AddThread_Click;
+            dbAdd.Click += AddDataBlock_Click;
+            signalAdd.Click += AddSignal_Click;
+            signalEdit.Click += EditSignal_Click;
+            signalDelete.Click += DeleteSignal_Click;
 
             // Привязка событий выбора элементов из списка
             threadsList.SelectedValueChanged += ThreadsList_SelectedValueChanged;
             rollgangList.SelectedValueChanged += RollgangList_SelectedValueChanged;
             labelList.SelectedValueChanged += LabelList_SelectedValueChanged;
-            signalsList.SelectedValueChanged += SignalName_SelectedValueChanged; 
+            signalsList.SelectedValueChanged += SignalName_SelectedValueChanged;
+            signalVirtual.CheckedChanged += SignalVirtual_CheckedChanged;
+            dbNamesList.SelectedValueChanged += DataBlocksList_SelectedValueChanged;
 
             // Обновление компонентов на форме
             ResetForm();
         }
 
+        public bool Modified
+        {
+            get => _modified;
+            set
+            {
+                Text = value
+                    ? "[*] Конфигуратор системы слежения ООО «АЭМЗ»"
+                    : "Конфигуратор системы слежения ООО «АЭМЗ»";
+
+                _modified = value;
+            }
+        }
 
         private void ResetForm()
         {
@@ -71,8 +91,8 @@ namespace ConfigGenerator
             UpdateThreadsList();
             UpdateLabelsView();
             UpdateRollgangsView();
+            UpdateDataBlocksList();
             UpdateSignalsView();
-            // UpdateSignalsList();
         }
 
         /// <summary>
@@ -209,13 +229,13 @@ namespace ConfigGenerator
         /// <param name="e"></param>
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
         {
-            if (_modified)
+            if (Modified)
             {
                 DialogResult result = MessageBox.Show("Выйти без сохранения внесенных изменений?", "Внимание!",
                     MessageBoxButtons.YesNo, MessageBoxIcon.Question);
                 if (result == DialogResult.Yes)
                 {
-                    _modified = false;
+                    Modified = false;
                     _logger.Info("Завершение работы программы");
                 }
                 else
@@ -242,18 +262,18 @@ namespace ConfigGenerator
         /// <param name="e"></param>
         private void OpenConfiguration_Click(object sender, EventArgs e)
         {
-            if (_modified)
+            if (Modified)
             {
                 DialogResult result = MessageBox.Show("Несохраненные данные будут утеряны!\nОткрыть конфигурацию без сохранения изменений в текущей?", "Внимание!",
                     MessageBoxButtons.YesNo, MessageBoxIcon.Question);
                 if (result == DialogResult.Yes)
                 {
-                    _modified = false;
+                    Modified = false;
                     _logger.Info("Открытие конфигурации без сохранения изменений в текущей");
                 }
             }
 
-            if (!_modified)
+            if (!Modified)
             {
                 OpenFileDialog openFileDialog = new OpenFileDialog();
                 openFileDialog.Filter = "Файлы конфигурации (*.txt)|*.txt|Все файлы (*.*)|*.*";
@@ -274,7 +294,7 @@ namespace ConfigGenerator
                     _statusBarMessage = String.Format("Открыта конфигурация из файла [{0}]. Найдено объектов: {1}",
                         _cfgFileName, cnt);
                     StatusText.Text = _statusBarMessage;
-                    _modified = false;
+                    Modified = false;
                     _logger.Info(_statusBarMessage);
                 }
             }
@@ -313,7 +333,7 @@ namespace ConfigGenerator
 
                 // Сохраняем конфигурацию в файл
                 await SaveToFile();
-                _modified = false;
+                Modified = false;
                 _logger.Info(_statusBarMessage);
             }
         }
@@ -338,7 +358,7 @@ namespace ConfigGenerator
 
                 // Сохраняем конфигурацию в файл
                 await SaveToFile();
-                _modified = false;
+                Modified = false;
                 _logger.Info(_statusBarMessage);
             }
         }
@@ -352,7 +372,7 @@ namespace ConfigGenerator
         {
             bool canCreate = false;
             // Создание нового экземпляра конфигурации
-            if (!_modified)
+            if (!Modified)
             {
                 canCreate = true;
             }
@@ -369,7 +389,7 @@ namespace ConfigGenerator
             if (canCreate)
             {
                 _cfgFileName = "";
-                _modified = false;
+                Modified = false;
                 _configuration = new Parser();
                 ConfigurationUnit tcpServer = new ConfigurationUnit();
                 tcpServer.Parameters.Add("Port", "0");
@@ -428,8 +448,11 @@ namespace ConfigGenerator
                 var sensor = _configuration.ListSensorUnits[0].ToString();
                 await wr.WriteLineAsync(sensor);
 
-                var signal = _configuration.ListSignalUnits[0].ToString();
-                await wr.WriteLineAsync(signal);
+                // Сохранение списка сигналов в файл
+                foreach (SignalUnit signal in _configuration.ListSignalUnits)
+                {
+                    await wr.WriteLineAsync(signal.ToString());
+                }
 
                 var stopper = _configuration.ListStopperUnits[0].ToString();
                 await wr.WriteLineAsync(stopper);
@@ -475,6 +498,8 @@ namespace ConfigGenerator
                     _configuration.ListAggregateUnits[0] = editAggregate.Aggregate;
                 else
                     _configuration.ListAggregateUnits.Add(editAggregate.Aggregate);
+
+                Modified = true;
             }
 
             editAggregate.Dispose();
@@ -493,7 +518,7 @@ namespace ConfigGenerator
             if (millConfig.Result == DialogResult.OK)
             {
                 _configuration.MillConfigUnit = millConfig.MillConfig;
-                _modified = true;
+                Modified = true;
             }
 
             millConfig.Dispose();
@@ -513,7 +538,7 @@ namespace ConfigGenerator
             if(addSubscriptions.Result==DialogResult.OK)
             {
                 _configuration.SubscriptionsUnit = addSubscriptions.Subscription;
-                _modified = true;
+                Modified = true;
             }
 
             addSubscriptions.Dispose();
@@ -541,7 +566,7 @@ namespace ConfigGenerator
                     _configuration.ListConnectionStringUnits[0] = editConnection.ConnectionString;
                 else
                     _configuration.ListConnectionStringUnits.Add(editConnection.ConnectionString);
-                _modified = true;
+                Modified = true;
             }
 
             editConnection.Dispose();
@@ -557,7 +582,9 @@ namespace ConfigGenerator
         /// </summary>
         private void UpdateThreadsList()
         {
-            var selected = threadsList.SelectedItem ?? null;
+            object selected = threadsList.SelectedItem;
+            threadAdd.Enabled = true;
+
             threadsList.Items.Clear();
 
             foreach (ThreadUnit thread in _configuration.ListThreadUnits)
@@ -576,7 +603,6 @@ namespace ConfigGenerator
 
                 editSelected.Enabled = true;
                 delSelected.Enabled = true;
-                fillSelected.Enabled = true;
             }
             else
             {
@@ -590,7 +616,51 @@ namespace ConfigGenerator
 
                 editSelected.Enabled = false;
                 delSelected.Enabled = false;
-                fillSelected.Enabled = false;
+            }
+        }
+
+        /// <summary>
+        ///  Обновить список блоков данных на форме
+        /// </summary>
+        private void UpdateDataBlocksList()
+        {
+            // Сохраняем ранее выделенный объект
+            object selected = dbNamesList.SelectedItem;
+                
+            dbNamesList.Items.Clear();
+            foreach (DataBlockUnit dataBlock in _configuration.ListDataBlockUnits)
+            {
+                dbNamesList.Items.Add(dataBlock.Name);
+            }
+
+            dbAdd.Enabled = true;
+
+            if (dbNamesList.Items.Count > 0)
+            {
+                // Восстанавливаем ранее выделенный объект
+                if (selected != null && dbNamesList.Items.Contains(selected))
+                    dbNamesList.SelectedItem = selected;
+                else
+                    dbNamesList.SelectedIndex = 0;
+                
+                dbEdit.Enabled = true;
+                dbDelete.Enabled = true;
+            }
+            else
+            {
+                // Очищаем значения полей формы, т.к. список блоков данных пуст
+                dbEdit.Enabled = false;
+                dbDelete.Enabled = false;
+                dbUid.Text = "";
+                dbType.Text = "";
+                dbSize.Text = "";
+                dbReversal.Checked = false;
+                dbServerName.Text = "";
+                dbPort.Text = "";
+                dbSrcName.Text = "";
+                dbSrcPort.Text = "";
+                dbHasHead.Checked = false;
+                dbPath.Text = "";
             }
         }
 
@@ -600,6 +670,7 @@ namespace ConfigGenerator
         private void UpdateLabelsView()
         {
             labelList.Items.Clear();
+            labelAdd.Enabled = threadsList.Items.Count>0;
 
             if (_threadNumber > 0)
             {
@@ -620,7 +691,6 @@ namespace ConfigGenerator
                 if (labelList.Items.Count > 0)
                 {
                     labelList.SelectedIndex = 0;
-                    labelAdd.Enabled = true;
                     labelEdit.Enabled = true;
                     labelDelete.Enabled = true;
                 }
@@ -629,7 +699,6 @@ namespace ConfigGenerator
                     labelPos.Text = "[0:0]";
                     labelThread.Text = "0";
 
-                    labelAdd.Enabled = false;
                     labelEdit.Enabled = false;
                     labelDelete.Enabled = false;
                 }
@@ -641,19 +710,81 @@ namespace ConfigGenerator
         /// </summary>
         private void UpdateSignalsView()
         {
-            signalsList.Items.Clear();
+            // Сохраняем ранее выделенный объект
+            object selected = signalsList.SelectedItem;
             
-            //TODO: Выполнить поиск сигналов на основании идентификатора выбранного блока данных
+            if(!signalVirtual.Checked)
+            {
+                signalAdd.Enabled = dbNamesList.Items.Count > 0;
+            }
+            else
+            {
+                signalAdd.Enabled = true;
+            }
+
+            if(!signalVirtual.Checked)
+            {
+                // Отображаем реальные сигналы
+                int dataBlockUid = 0;
+                if (!string.IsNullOrEmpty(dbNamesList.Text))
+                {
+                    dataBlockUid = _configuration.FindDataBlock(dbNamesList.Text).Uid;
+                }
+
+                List<SignalUnit> signals = _configuration.GetSignals(dataBlockUid);
+                signalsList.Items.Clear();
+                foreach (SignalUnit signal in signals)
+                {
+                    signalsList.Items.Add(signal.Name);
+                }
+            }
+            else
+            {
+                // Отображаем виртуальные сигналы
+                List<SignalUnit> signals = _configuration.GetVirtualSignals();
+                signalsList.Items.Clear();
+                foreach (SignalUnit signal in signals)
+                {
+                    signalsList.Items.Add(signal.Name);
+                }
+
+            }
+            
+            if (signalsList.Items.Count > 0)
+            {
+                // Восстанавливаем ранее выделенный объект
+                if (selected != null && signalsList.Items.Contains(selected))
+                    signalsList.SelectedItem = selected;
+                else
+                    signalsList.SelectedIndex = 0;
+
+                signalEdit.Enabled = true;
+                signalDelete.Enabled = true;
+            }
+            else
+            {
+                // Очищаем поля на форме, т.к. список сигналов пуст
+                signalUid.Text = "";
+                signalType.Text = "";
+                signalDataBlock.Text = "";
+                signalTag.Text = "";
+                signalByte.Text = "";
+                signalVirtValue.Text = "";
+                signalCompound.Text = "";
+                signalReadOnly.Checked = false;
+                signalEdit.Enabled = false;
+                signalDelete.Enabled = false;
+            }
         }
         
         /// <summary>
         /// Обновление списка рольгангов на нити
         /// </summary>
-        /// <param name="threadNumber">Номер нити производства</param>
         private void UpdateRollgangsView()
         {
             rollgangList.Items.Clear();
-
+            rollgangAdd.Enabled = threadsList.Items.Count>0;
+            
             if (_threadNumber > 0)
             {
                 // Получим список рольгангов на производственной нити
@@ -666,14 +797,12 @@ namespace ConfigGenerator
                         {
                             rollgangList.Items.Add(rollgang.Name);
                         }
-                        
                     }
                 }
 
                 if (rollgangList.Items.Count > 0)
                 {
                     rollgangList.SelectedIndex = 0;
-                    rollgangAdd.Enabled = true;
                     rollgangEdit.Enabled = true;
                     rollgangDelete.Enabled = true;
                 }
@@ -685,7 +814,6 @@ namespace ConfigGenerator
                     rollgangSignalSpeed.Text = "0";
                     rollgangSpeedValue.Text = "0";
 
-                    rollgangAdd.Enabled = false;
                     rollgangEdit.Enabled = false;
                     rollgangDelete.Enabled = false;
                 }
@@ -714,7 +842,7 @@ namespace ConfigGenerator
                 UpdateThreadsList();
                 _statusBarMessage = $"Изменены параметры нити [{thread.Name}]";
                 StatusText.Text = _statusBarMessage;
-                _modified = true;
+                Modified = true;
             }
 
             addThread.Dispose();
@@ -752,18 +880,19 @@ namespace ConfigGenerator
         /// <param name="e"></param>
         private void AddThread_Click(object sender, EventArgs e)
         {
-            AddThread addThread = new AddThread();
-            addThread.Mode = FormMode.Add;
+            AddThread addThread = new AddThread {Mode = FormMode.Add};
             addThread.ShowDialog();
             if (addThread.Result == DialogResult.OK)
             {
                 ThreadUnit thread = addThread.Thread;
                 _configuration.ListThreadUnits.Add(thread);
+                _configuration.FillProductionThreads();
+                _productionThreadsList = _configuration.GetProductionThreads();
 
                 UpdateThreadsList();
                 _statusBarMessage = $"Добавлена новая нить [{thread.Name}]";
                 StatusText.Text = _statusBarMessage;
-                _modified = true;
+                Modified = true;
             }
 
             addThread.Dispose();
@@ -836,14 +965,65 @@ namespace ConfigGenerator
         {
             SignalUnit signal = _configuration.FindSignal(signalsList.Text);
             signalUid.Text = signal.Uid.ToString();
-            signalType.Text = signal.Type.ToString();
-            signalDataBlock.Text = _configuration.FindDataBlock(signal.DataBlockUid).Name;
-            signalByte.Text = signal.Byte.ToString();
-            signalVirtValue.Text = signal.VirtualValue.ToString("F1");
-            signalCompound.Text = signal.CompoundSignal.ToString();
+            switch (signal.CompoundSignal)
+            {
+                case CompoundSignalType.SIMPLE_SIGNAL :
+                    signalType.Text = signal.Type.ToString();
+                    signalDataBlock.Text = _configuration.FindDataBlock(signal.DataBlockUid).Name;
+                    signalTag.Text = signal.ServerName;
+                    signalByte.Text = signal.Byte.ToString();
+                    signalVirtValue.Text = "";
+                    signalCompound.Text = "";
+                    signalReadOnly.Checked = true;
+                    break;
+                case CompoundSignalType.VIRTUAL_SIGNAL :
+                    signalType.Text = signal.Type == SignalType.NONE ?  "" : signal.Type.ToString();
+                    signalDataBlock.Text = "";
+                    signalTag.Text = "";
+                    signalByte.Text = "";
+                    signalVirtValue.Text = signal.VirtualValue.ToString("F1");
+                    signalCompound.Text = signal.CompoundSignal.ToString();
+                    signalReadOnly.Checked = !signal.UserWrite;
+                    break;
+            }
 
             _statusBarMessage = $"Выбран сигнал: [{signal.Uid}] {signal.Name}";
             StatusText.Text = _statusBarMessage;
+        }
+
+        /// <summary>
+        /// Обработка события изменения выбранного значения блока данных
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void DataBlocksList_SelectedValueChanged(object sender, EventArgs e)
+        {
+            DataBlockUnit dataBlock = _configuration.FindDataBlock(dbNamesList.Text);
+            dbUid.Text = dataBlock.Uid.ToString();
+            dbType.Text = dataBlock.Type.ToString();
+            dbSize.Text = dataBlock.DataBlockSize.ToString();
+            dbServerName.Text = dataBlock.ServerName;
+            dbPort.Text = dataBlock.Port.ToString();
+            dbSrcName.Text = dataBlock.SenderHost;
+            dbSrcPort.Text = dataBlock.SenderPort.ToString();
+            dbReversal.Checked = dataBlock.Reversal;
+            dbHasHead.Checked = dataBlock.HasHead;
+            dbPath.Text = dataBlock.ServerPath;
+            
+            _statusBarMessage = $"Выбран блок данных: [{dataBlock.Uid}] {dataBlock.Name}";
+            StatusText.Text = _statusBarMessage;
+            
+            UpdateSignalsView();
+        }
+
+        /// <summary>
+        /// Изменение состояния переключателя между виритуальными и реальными сигналами
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void SignalVirtual_CheckedChanged(object sender, EventArgs e)
+        {
+            UpdateSignalsView();
         }
 
         /// <summary>
@@ -853,7 +1033,20 @@ namespace ConfigGenerator
         /// <param name="e"></param>
         private void AddDataBlock_Click(object sender, EventArgs e)
         {
+            AddDataBlock addDataBlock = new AddDataBlock {Mode = FormMode.Add};
+            addDataBlock.ShowDialog();
+            if (addDataBlock.Result == DialogResult.OK)
+            {
+                DataBlockUnit dataBlock = addDataBlock.DataBlock;
+                _configuration.ListDataBlockUnits.Add(dataBlock);
+                
+                UpdateDataBlocksList();
+                _statusBarMessage = $"Добавлен блок данных [{dataBlock.Name}]";
+                StatusText.Text = _statusBarMessage;
+                Modified = true;
+            }
 
+            addDataBlock.Dispose();
         }
 
         /// <summary>
@@ -863,8 +1056,119 @@ namespace ConfigGenerator
         /// <param name="e"></param>
         private void AddSignal_Click(object sender, EventArgs e)
         {
+            AddSignal addSignal = new AddSignal(signalVirtual.Checked, dbNamesList.Text, GetDataBlocksList());
+            
+            addSignal.ShowDialog();
+            if (addSignal.Result == DialogResult.OK)
+            {
+                SignalUnit signal = addSignal.Signal;
+                _configuration.ListSignalUnits.Add(signal);
+                _configuration.FillProductionThreads();
+                
+                UpdateDataBlocksList();
+                _statusBarMessage = $"Добавлен сигнал [{signal.Name}]";
+                StatusText.Text = _statusBarMessage;
+                Modified = true;
+            }
 
+            addSignal.Dispose();
+            Modified = true;
         }
+
+        /// <summary>
+        /// Обработка события нажатия кнопки Редактировать сигнал
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void EditSignal_Click(object sender, EventArgs e)
+        {
+            SignalUnit signal = _configuration.FindSignal(int.Parse(signalUid.Text));
+            if (signal != null)
+            {
+                AddSignal editSignal = new AddSignal(signalVirtual.Checked, dbNamesList.Text, GetDataBlocksList());
+                editSignal.EditSignal(signal);
+                
+                editSignal.Dispose();
+            }
+        }
+        
+        /// <summary>
+        /// Удалить выделенный сигнал
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void DeleteSignal_Click(object sender, EventArgs e)
+        {
+            SignalUnit signal = _configuration.FindSignal(int.Parse(signalUid.Text));
+            if (signal != null)
+            {
+                DialogResult result = MessageBox.Show($"Сигнал [{signal.Uid}] - {signal.Name} будет удален!\nУверены?", "Внимание!",
+                    MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+                if (result == DialogResult.Yes)
+                {
+                    if (_configuration.DeleteSignal(signal.Uid))
+                    {
+                        _logger.Info($"Удален cигнал [{signal.Uid}] - {signal.Name}");
+                        _statusBarMessage = $"Удален сигнал [{signal.Name}]";
+                        StatusText.Text = _statusBarMessage;
+                        UpdateSignalsView();
+                    }
+                    else
+                    {
+                        _logger.Info($"Ошибка при удалении cигнала [{signal.Uid}] - {signal.Name}");
+                        _statusBarMessage = $"Ошибка при удалении cигнала [{signal.Uid}] - {signal.Name}";
+                        StatusText.Text = _statusBarMessage;
+                    }
+                }
+            }
+        }
+        
+        /// <summary>
+        /// Получить список блоков данных
+        /// </summary>
+        /// <returns></returns>
+        private Dictionary<int, string> GetDataBlocksList()
+        {
+            Dictionary<int, string> result = new Dictionary<int, string>();
+            foreach (DataBlockUnit dataBlockUnit in _configuration.ListDataBlockUnits)
+            {
+                result.Add(dataBlockUnit.Uid, dataBlockUnit.Name);
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Получить тип блока данных по его наименованию
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        // private DataBlockType GetDBType(string type)
+        // {
+        //     DataBlockType result;
+        //     switch (type)
+        //     {
+        //         case "TIMESET" :
+        //             result = DataBlockType.TIMESET;
+        //             break;
+        //         case "TCP_SERVER" :
+        //             result = DataBlockType.TCP_SERVER;
+        //             break;
+        //         case "TCP_CLIENT" :
+        //             result = DataBlockType.TCP_CLIENT;
+        //             break;
+        //         case "OPC" :
+        //             result = DataBlockType.OPC;
+        //             break;
+        //         case "UDP" :
+        //             result = DataBlockType.UDP;
+        //             break;
+        //         default: result = DataBlockType.TIMESET;
+        //             break;
+        //     }
+        //
+        //     return result;
+        // }
 
         /// <summary>
         /// Обработка события выбора пункта меню "Добавить параметр ЕУ"
@@ -891,7 +1195,7 @@ namespace ConfigGenerator
         /// <param name="e"></param>
         private void rollgangEdit_Click(object sender, EventArgs e)
         {
-
+            _logger.Info("Щелчек по кнопке Редактировать рольганг");
         }
 
         /// <summary>
@@ -901,7 +1205,8 @@ namespace ConfigGenerator
         /// <param name="e"></param>
         private void rollgangDelete_Click(object sender, EventArgs e)
         {
-
+            _logger.Info("Щелчек по кнопке Удалить рольганг");
         }
+        
     }
 }

@@ -33,6 +33,8 @@ namespace ConfigGenerator.Forms
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(AddDataBlock));
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.textPath = new System.Windows.Forms.TextBox();
+            this.label9 = new System.Windows.Forms.Label();
             this.textServer = new System.Windows.Forms.TextBox();
             this.label8 = new System.Windows.Forms.Label();
             this.checkHeader = new System.Windows.Forms.CheckBox();
@@ -60,6 +62,8 @@ namespace ConfigGenerator.Forms
             // 
             // groupBox1
             // 
+            this.groupBox1.Controls.Add(this.textPath);
+            this.groupBox1.Controls.Add(this.label9);
             this.groupBox1.Controls.Add(this.textServer);
             this.groupBox1.Controls.Add(this.label8);
             this.groupBox1.Controls.Add(this.checkHeader);
@@ -76,10 +80,26 @@ namespace ConfigGenerator.Forms
             this.groupBox1.Controls.Add(this.label1);
             this.groupBox1.Location = new System.Drawing.Point(12, 12);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(359, 158);
+            this.groupBox1.Size = new System.Drawing.Size(359, 208);
             this.groupBox1.TabIndex = 0;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Общие параметры";
+            // 
+            // textPath
+            // 
+            this.textPath.Location = new System.Drawing.Point(103, 129);
+            this.textPath.Name = "textPath";
+            this.textPath.Size = new System.Drawing.Size(117, 20);
+            this.textPath.TabIndex = 13;
+            // 
+            // label9
+            // 
+            this.label9.AutoSize = true;
+            this.label9.Location = new System.Drawing.Point(6, 132);
+            this.label9.Name = "label9";
+            this.label9.Size = new System.Drawing.Size(77, 13);
+            this.label9.TabIndex = 14;
+            this.label9.Text = "Путь доступа:";
             // 
             // textServer
             // 
@@ -98,7 +118,7 @@ namespace ConfigGenerator.Forms
             // 
             // checkHeader
             // 
-            this.checkHeader.Location = new System.Drawing.Point(145, 129);
+            this.checkHeader.Location = new System.Drawing.Point(145, 173);
             this.checkHeader.Name = "checkHeader";
             this.checkHeader.Size = new System.Drawing.Size(80, 20);
             this.checkHeader.TabIndex = 7;
@@ -107,7 +127,7 @@ namespace ConfigGenerator.Forms
             // 
             // checkReversal
             // 
-            this.checkReversal.Location = new System.Drawing.Point(7, 129);
+            this.checkReversal.Location = new System.Drawing.Point(7, 173);
             this.checkReversal.Name = "checkReversal";
             this.checkReversal.Size = new System.Drawing.Size(128, 20);
             this.checkReversal.TabIndex = 6;
@@ -138,7 +158,7 @@ namespace ConfigGenerator.Forms
             // 
             // label4
             // 
-            this.label4.Location = new System.Drawing.Point(6, 77);
+            this.label4.Location = new System.Drawing.Point(6, 80);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(91, 19);
             this.label4.TabIndex = 6;
@@ -198,7 +218,7 @@ namespace ConfigGenerator.Forms
             this.groupBox2.Controls.Add(this.textSenderIp);
             this.groupBox2.Controls.Add(this.label7);
             this.groupBox2.Controls.Add(this.label6);
-            this.groupBox2.Location = new System.Drawing.Point(12, 176);
+            this.groupBox2.Location = new System.Drawing.Point(12, 226);
             this.groupBox2.Name = "groupBox2";
             this.groupBox2.Size = new System.Drawing.Size(359, 62);
             this.groupBox2.TabIndex = 1;
@@ -238,7 +258,7 @@ namespace ConfigGenerator.Forms
             // button1
             // 
             this.button1.DialogResult = System.Windows.Forms.DialogResult.OK;
-            this.button1.Location = new System.Drawing.Point(114, 254);
+            this.button1.Location = new System.Drawing.Point(105, 308);
             this.button1.Name = "button1";
             this.button1.Size = new System.Drawing.Size(75, 23);
             this.button1.TabIndex = 10;
@@ -249,7 +269,7 @@ namespace ConfigGenerator.Forms
             // button2
             // 
             this.button2.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.button2.Location = new System.Drawing.Point(218, 254);
+            this.button2.Location = new System.Drawing.Point(209, 308);
             this.button2.Name = "button2";
             this.button2.Size = new System.Drawing.Size(75, 23);
             this.button2.TabIndex = 11;
@@ -263,7 +283,7 @@ namespace ConfigGenerator.Forms
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.button2;
-            this.ClientSize = new System.Drawing.Size(380, 289);
+            this.ClientSize = new System.Drawing.Size(380, 343);
             this.Controls.Add(this.button2);
             this.Controls.Add(this.button1);
             this.Controls.Add(this.groupBox2);
@@ -281,6 +301,9 @@ namespace ConfigGenerator.Forms
             this.groupBox2.PerformLayout();
             this.ResumeLayout(false);
         }
+
+        private System.Windows.Forms.Label label9;
+        private System.Windows.Forms.TextBox textPath;
 
         private System.Windows.Forms.TextBox textServer;
 

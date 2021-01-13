@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel;
+using System.Windows.Forms;
 
 namespace ConfigGenerator.Forms
 {
@@ -41,7 +42,7 @@ namespace ConfigGenerator.Forms
             this.label7 = new System.Windows.Forms.Label();
             this.label8 = new System.Windows.Forms.Label();
             this.label10 = new System.Windows.Forms.Label();
-            this.checkBox1 = new System.Windows.Forms.CheckBox();
+            this.cbUserWrite = new System.Windows.Forms.CheckBox();
             this.textUid = new System.Windows.Forms.TextBox();
             this.textName = new System.Windows.Forms.TextBox();
             this.textVirtualValue = new System.Windows.Forms.TextBox();
@@ -51,8 +52,8 @@ namespace ConfigGenerator.Forms
             this.textBit = new System.Windows.Forms.TextBox();
             this.textServerName = new System.Windows.Forms.TextBox();
             this.textAnalogLevel = new System.Windows.Forms.TextBox();
-            this.button1 = new System.Windows.Forms.Button();
-            this.button2 = new System.Windows.Forms.Button();
+            this.mbOk = new System.Windows.Forms.Button();
+            this.mbCancel = new System.Windows.Forms.Button();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.checkVirtual = new System.Windows.Forms.CheckBox();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
@@ -132,14 +133,14 @@ namespace ConfigGenerator.Forms
             this.label10.TabIndex = 9;
             this.label10.Text = "Аналоговый уровень:";
             // 
-            // checkBox1
+            // cbUserWrite
             // 
-            this.checkBox1.Location = new System.Drawing.Point(6, 129);
-            this.checkBox1.Name = "checkBox1";
-            this.checkBox1.Size = new System.Drawing.Size(118, 24);
-            this.checkBox1.TabIndex = 10;
-            this.checkBox1.Text = "Запись значения";
-            this.checkBox1.UseVisualStyleBackColor = true;
+            this.cbUserWrite.Location = new System.Drawing.Point(6, 129);
+            this.cbUserWrite.Name = "cbUserWrite";
+            this.cbUserWrite.Size = new System.Drawing.Size(118, 24);
+            this.cbUserWrite.TabIndex = 10;
+            this.cbUserWrite.Text = "Запись значения";
+            this.cbUserWrite.UseVisualStyleBackColor = true;
             // 
             // textUid
             // 
@@ -164,17 +165,22 @@ namespace ConfigGenerator.Forms
             // 
             // comboType
             // 
+            this.comboType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboType.FormattingEnabled = true;
             this.comboType.Items.AddRange(new object[] {"BINARY", "BOOL", "BYTE", "DINT", "DWORD", "DWORDOM", "INT", "REAL", "REALOM", "WORD"});
             this.comboType.Location = new System.Drawing.Point(225, 26);
+            this.comboType.MaxDropDownItems = 4;
             this.comboType.Name = "comboType";
             this.comboType.Size = new System.Drawing.Size(93, 21);
             this.comboType.TabIndex = 3;
             // 
             // comboDataBlock
             // 
+            this.comboDataBlock.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboDataBlock.DropDownWidth = 200;
             this.comboDataBlock.FormattingEnabled = true;
             this.comboDataBlock.Location = new System.Drawing.Point(88, 78);
+            this.comboDataBlock.MaxDropDownItems = 4;
             this.comboDataBlock.Name = "comboDataBlock";
             this.comboDataBlock.Size = new System.Drawing.Size(117, 21);
             this.comboDataBlock.TabIndex = 4;
@@ -207,27 +213,27 @@ namespace ConfigGenerator.Forms
             this.textAnalogLevel.Size = new System.Drawing.Size(75, 20);
             this.textAnalogLevel.TabIndex = 11;
             // 
-            // button1
+            // mbOk
             // 
-            this.button1.DialogResult = System.Windows.Forms.DialogResult.OK;
-            this.button1.Location = new System.Drawing.Point(79, 266);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(75, 23);
-            this.button1.TabIndex = 12;
-            this.button1.Text = "OK";
-            this.button1.UseVisualStyleBackColor = true;
-            this.button1.Click += new System.EventHandler(this.button1_Click);
+            this.mbOk.DialogResult = System.Windows.Forms.DialogResult.OK;
+            this.mbOk.Location = new System.Drawing.Point(79, 266);
+            this.mbOk.Name = "mbOk";
+            this.mbOk.Size = new System.Drawing.Size(75, 23);
+            this.mbOk.TabIndex = 12;
+            this.mbOk.Text = "OK";
+            this.mbOk.UseVisualStyleBackColor = true;
+            this.mbOk.Click += new System.EventHandler(this.button1_Click);
             // 
-            // button2
+            // mbCancel
             // 
-            this.button2.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.button2.Location = new System.Drawing.Point(181, 266);
-            this.button2.Name = "button2";
-            this.button2.Size = new System.Drawing.Size(75, 23);
-            this.button2.TabIndex = 13;
-            this.button2.Text = "Отмена";
-            this.button2.UseVisualStyleBackColor = true;
-            this.button2.Click += new System.EventHandler(this.button2_Click);
+            this.mbCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
+            this.mbCancel.Location = new System.Drawing.Point(181, 266);
+            this.mbCancel.Name = "mbCancel";
+            this.mbCancel.Size = new System.Drawing.Size(75, 23);
+            this.mbCancel.TabIndex = 13;
+            this.mbCancel.Text = "Отмена";
+            this.mbCancel.UseVisualStyleBackColor = true;
+            this.mbCancel.Click += new System.EventHandler(this.button2_Click);
             // 
             // groupBox1
             // 
@@ -242,7 +248,7 @@ namespace ConfigGenerator.Forms
             this.groupBox1.Controls.Add(this.label3);
             this.groupBox1.Controls.Add(this.label10);
             this.groupBox1.Controls.Add(this.textBit);
-            this.groupBox1.Controls.Add(this.checkBox1);
+            this.groupBox1.Controls.Add(this.cbUserWrite);
             this.groupBox1.Controls.Add(this.textByte);
             this.groupBox1.Controls.Add(this.label4);
             this.groupBox1.Controls.Add(this.comboDataBlock);
@@ -278,15 +284,15 @@ namespace ConfigGenerator.Forms
             // 
             // AddSignal
             // 
-            this.AcceptButton = this.button1;
+            this.AcceptButton = this.mbOk;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.CancelButton = this.button2;
+            this.CancelButton = this.mbCancel;
             this.ClientSize = new System.Drawing.Size(346, 301);
             this.Controls.Add(this.groupBox2);
             this.Controls.Add(this.groupBox1);
-            this.Controls.Add(this.button2);
-            this.Controls.Add(this.button1);
+            this.Controls.Add(this.mbCancel);
+            this.Controls.Add(this.mbOk);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.Fixed3D;
             this.Icon = ((System.Drawing.Icon) (resources.GetObject("$this.Icon")));
             this.MaximizeBox = false;
@@ -305,8 +311,8 @@ namespace ConfigGenerator.Forms
         private System.Windows.Forms.GroupBox groupBox1;
         private System.Windows.Forms.GroupBox groupBox2;
 
-        private System.Windows.Forms.Button button1;
-        private System.Windows.Forms.Button button2;
+        private System.Windows.Forms.Button mbOk;
+        private System.Windows.Forms.Button mbCancel;
         private System.Windows.Forms.TextBox textAnalogLevel;
         private System.Windows.Forms.TextBox textBit;
         private System.Windows.Forms.TextBox textByte;
@@ -317,7 +323,7 @@ namespace ConfigGenerator.Forms
 
         private System.Windows.Forms.ComboBox comboType;
 
-        private System.Windows.Forms.CheckBox checkBox1;
+        private System.Windows.Forms.CheckBox cbUserWrite;
         private System.Windows.Forms.Label label10;
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.Label label6;
