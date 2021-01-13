@@ -19,7 +19,6 @@ namespace ConfigGenerator
         private string _cfgFileName;
         private readonly Logger _logger;
         private bool _modified;
-        private string _statusBarMessage = "Готово.";
         private Parser _configuration;
         private List<ProductionThread> _productionThreadsList;
         private int _threadNumber;
@@ -28,7 +27,6 @@ namespace ConfigGenerator
         {
             InitializeComponent();
             _logger = LogManager.GetCurrentClassLogger();
-            StatusText.Text = _statusBarMessage;
             _logger.Info("Запуск программы");
             
             _configuration = new Parser();            
@@ -56,6 +54,8 @@ namespace ConfigGenerator
             // Привязка обработчиков событий для нажатий на кнопки
             threadAdd.Click += AddThread_Click;
             dbAdd.Click += AddDataBlock_Click;
+            dbEdit.Click += EditDataBlock_Click;
+            dbDelete.Click += DeleteDataBlock_Click;
             signalAdd.Click += AddSignal_Click;
             signalEdit.Click += EditSignal_Click;
             signalDelete.Click += DeleteSignal_Click;
@@ -70,6 +70,8 @@ namespace ConfigGenerator
 
             // Обновление компонентов на форме
             ResetForm();
+            
+            ShowStatusText("Готово.");
         }
 
         public bool Modified
@@ -291,11 +293,10 @@ namespace ConfigGenerator
                     ResetForm();
 
                     int cnt = _configuration.GetElementsCount();
-                    _statusBarMessage = String.Format("Открыта конфигурация из файла [{0}]. Найдено объектов: {1}",
-                        _cfgFileName, cnt);
-                    StatusText.Text = _statusBarMessage;
+                    string msg = $"Открыта конфигурация из файла [{_cfgFileName}]. Найдено объектов: {cnt}";
+                    ShowStatusText(msg);
+                    _logger.Info(msg);
                     Modified = false;
-                    _logger.Info(_statusBarMessage);
                 }
             }
         }
@@ -328,13 +329,13 @@ namespace ConfigGenerator
 
             if (canSave)
             {
-                _statusBarMessage = $"Текущая конфигурация сохранена в файле [{_cfgFileName}]";
-                StatusText.Text = _statusBarMessage;
-
                 // Сохраняем конфигурацию в файл
                 await SaveToFile();
                 Modified = false;
-                _logger.Info(_statusBarMessage);
+                string msg = $"Текущая конфигурация сохранена в файле [{_cfgFileName}]";
+                _logger.Info(msg);
+                ShowStatusText(msg);
+
             }
         }
 
@@ -352,14 +353,13 @@ namespace ConfigGenerator
             saveFileDialog.OverwritePrompt = true;
             if (saveFileDialog.ShowDialog() == DialogResult.OK)
             {
-                _cfgFileName = saveFileDialog.FileName;
-                _statusBarMessage = $"Текущая конфигурация сохранена в файле [{_cfgFileName}]";
-                StatusText.Text = _statusBarMessage;
-
                 // Сохраняем конфигурацию в файл
                 await SaveToFile();
+                _cfgFileName = saveFileDialog.FileName;
+                string msg = $"Текущая конфигурация сохранена в файле [{_cfgFileName}]";
+                ShowStatusText(msg);
                 Modified = false;
-                _logger.Info(_statusBarMessage);
+                _logger.Info(msg);
             }
         }
 
@@ -400,9 +400,9 @@ namespace ConfigGenerator
 
                 ResetForm(); // Устанавливаем все элементы формы в начальное состояние
 
-                _statusBarMessage = "Создана новая конфигурация";
-                StatusText.Text = _statusBarMessage;
-                _logger.Info(_statusBarMessage);
+                const string msg = "Создана новая конфигурация";
+                ShowStatusText(msg);
+                _logger.Info(msg);
             }
         }
 
@@ -840,8 +840,9 @@ namespace ConfigGenerator
                 _configuration.ReplaceThreadUnit(thread);
 
                 UpdateThreadsList();
-                _statusBarMessage = $"Изменены параметры нити [{thread.Name}]";
-                StatusText.Text = _statusBarMessage;
+                string msg = $"Изменены параметры нити [{thread.Name}]";
+                ShowStatusText(msg);
+                _logger.Info(msg);
                 Modified = true;
             }
 
@@ -890,8 +891,9 @@ namespace ConfigGenerator
                 _productionThreadsList = _configuration.GetProductionThreads();
 
                 UpdateThreadsList();
-                _statusBarMessage = $"Добавлена новая нить [{thread.Name}]";
-                StatusText.Text = _statusBarMessage;
+                string msg = $"Добавлена новая нить [{thread.Name}]";
+                ShowStatusText(msg);
+                _logger.Info(msg);
                 Modified = true;
             }
 
@@ -913,8 +915,8 @@ namespace ConfigGenerator
             textThreadDirection.Text = thread.Direction == ThreadDirection.Horizontal ? "Горизонтально" : "Вертикально";
             checkThreadStopAtEnds.Checked = thread.StopOnEnds;
 
-            _statusBarMessage = $"Выбрана линия производства: [{thread.Uid}] {thread.Name}";
-            StatusText.Text = _statusBarMessage;
+            // _statusBarMessage = $"Выбрана линия производства: [{thread.Uid}] {thread.Name}";
+            // StatusText.Text = _statusBarMessage;
 
             _threadNumber = thread.ThreadNumber;
 
@@ -937,8 +939,8 @@ namespace ConfigGenerator
             rollgangSignalSpeed.Text = rollgang.SignalSpeed.ToString();
             rollgangSpeedValue.Text = rollgang.SpeedValue.ToString("F1");
 
-            _statusBarMessage = $"Выбран рольганг: [{rollgang.Uid}] {rollgang.Name}";
-            StatusText.Text = _statusBarMessage;
+            // _statusBarMessage = $"Выбран рольганг: [{rollgang.Uid}] {rollgang.Name}";
+            // StatusText.Text = _statusBarMessage;
         }
 
         /// <summary>
@@ -952,8 +954,8 @@ namespace ConfigGenerator
             labelThread.Text = label.ThreadNumber.ToString();
             labelPos.Text = $"[{label.Position.PosX}:{label.Position.PosY}]";
 
-            _statusBarMessage = $"Выбрана метка: [{label.Text}]";
-            StatusText.Text = _statusBarMessage;
+            // _statusBarMessage = $"Выбрана метка: [{label.Text}]";
+            // StatusText.Text = _statusBarMessage;
         }
 
         /// <summary>
@@ -987,8 +989,8 @@ namespace ConfigGenerator
                     break;
             }
 
-            _statusBarMessage = $"Выбран сигнал: [{signal.Uid}] {signal.Name}";
-            StatusText.Text = _statusBarMessage;
+            // _statusBarMessage = $"Выбран сигнал: [{signal.Uid}] {signal.Name}";
+            // StatusText.Text = _statusBarMessage;
         }
 
         /// <summary>
@@ -1010,8 +1012,8 @@ namespace ConfigGenerator
             dbHasHead.Checked = dataBlock.HasHead;
             dbPath.Text = dataBlock.ServerPath;
             
-            _statusBarMessage = $"Выбран блок данных: [{dataBlock.Uid}] {dataBlock.Name}";
-            StatusText.Text = _statusBarMessage;
+            // _statusBarMessage = $"Выбран блок данных: [{dataBlock.Uid}] {dataBlock.Name}";
+            // StatusText.Text = _statusBarMessage;
             
             UpdateSignalsView();
         }
@@ -1033,7 +1035,7 @@ namespace ConfigGenerator
         /// <param name="e"></param>
         private void AddDataBlock_Click(object sender, EventArgs e)
         {
-            AddDataBlock addDataBlock = new AddDataBlock {Mode = FormMode.Add};
+            AddDataBlock addDataBlock = new AddDataBlock();
             addDataBlock.ShowDialog();
             if (addDataBlock.Result == DialogResult.OK)
             {
@@ -1041,12 +1043,86 @@ namespace ConfigGenerator
                 _configuration.ListDataBlockUnits.Add(dataBlock);
                 
                 UpdateDataBlocksList();
-                _statusBarMessage = $"Добавлен блок данных [{dataBlock.Name}]";
-                StatusText.Text = _statusBarMessage;
+                string msg = $"Добавлен блок данных [{dataBlock.Name}]";
+                ShowStatusText(msg);
+                _logger.Info(msg);
                 Modified = true;
             }
 
             addDataBlock.Dispose();
+        }
+
+        /// <summary>
+        /// Обработка события нажатия на кнопку Редактировать блок данных
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void EditDataBlock_Click(object sender, EventArgs e)
+        {
+            DataBlockUnit dBlock = _configuration.FindDataBlock(int.Parse(dbUid.Text));
+            if (dBlock != null)
+            {
+                AddDataBlock editDataBlock = new AddDataBlock();
+                editDataBlock.DataBlock = dBlock;
+                editDataBlock.EditDataBlock();
+                if (editDataBlock.Result == DialogResult.OK)
+                {
+                    Modified = true;
+                    DataBlockUnit db = editDataBlock.DataBlock;
+                    _configuration.ReplaceDataBlockUnit(db);
+
+                    string msg = $"Изменены параметры блока данных [{dBlock.Uid}] {dBlock.Name}";
+                    ShowStatusText(msg);
+                    _logger.Info(msg);
+                }
+                
+                editDataBlock.Dispose();
+                UpdateDataBlocksList();
+            }
+        }
+        
+        /// <summary>
+        /// Обработка события нажатия на кнопку Удалить блок данных
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void DeleteDataBlock_Click(object sender, EventArgs e)
+        {
+            DataBlockUnit dataBlock = _configuration.FindDataBlock(int.Parse(dbUid.Text));
+            if (dataBlock != null)
+            {
+                DialogResult result = MessageBox.Show($"Блок данных [{dataBlock.Uid}] - {dataBlock.Name} будет удален!\nУверены?", "Внимание!",
+                    MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+                if (result == DialogResult.Yes)
+                {
+                    int resDelete = _configuration.DeleteDataBlock(dataBlock.Uid);
+                    string msg;
+                    if (resDelete == 0)
+                    {
+                        msg = $"Удален блок данных [{dataBlock.Uid}] - {dataBlock.Name}";
+                        _logger.Info(msg);
+                        ShowStatusText(msg);
+                        UpdateDataBlocksList();
+                    }
+                    else
+                    {
+                        if (resDelete == -1)
+                        {
+                            msg = $"Ошибка при удалении блока данных [{dataBlock.Name}] - Блок данных не найден";
+                            _logger.Info(msg);
+                            ShowStatusText(msg);
+                        }
+                        else
+                        {
+                            msg = $"Ошибка при удалении блока данных [{dataBlock.Name}] - Привязано сигналов: {resDelete}";
+                            _logger.Info(msg);
+                            ShowStatusText(msg);
+                        }
+
+                        MessageBox.Show(msg, "Ошибка!", MessageBoxButtons.YesNo, MessageBoxIcon.Error);
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -1066,8 +1142,9 @@ namespace ConfigGenerator
                 _configuration.FillProductionThreads();
                 
                 UpdateDataBlocksList();
-                _statusBarMessage = $"Добавлен сигнал [{signal.Name}]";
-                StatusText.Text = _statusBarMessage;
+                string msg = $"Добавлен сигнал [{signal.Name}]";
+                ShowStatusText(msg);
+                _logger.Info(msg);
                 Modified = true;
             }
 
@@ -1089,6 +1166,7 @@ namespace ConfigGenerator
                 editSignal.EditSignal(signal);
                 
                 editSignal.Dispose();
+                UpdateSignalsView();
             }
         }
         
@@ -1108,16 +1186,16 @@ namespace ConfigGenerator
                 {
                     if (_configuration.DeleteSignal(signal.Uid))
                     {
-                        _logger.Info($"Удален cигнал [{signal.Uid}] - {signal.Name}");
-                        _statusBarMessage = $"Удален сигнал [{signal.Name}]";
-                        StatusText.Text = _statusBarMessage;
+                        string msg = $"Удален cигнал [{signal.Uid}] - {signal.Name}";
+                        _logger.Info(msg);
+                        ShowStatusText(msg);
                         UpdateSignalsView();
                     }
                     else
                     {
-                        _logger.Info($"Ошибка при удалении cигнала [{signal.Uid}] - {signal.Name}");
-                        _statusBarMessage = $"Ошибка при удалении cигнала [{signal.Uid}] - {signal.Name}";
-                        StatusText.Text = _statusBarMessage;
+                        string msg = $"Ошибка при удалении cигнала [{signal.Uid}] - {signal.Name}";
+                        _logger.Info(msg);
+                        ShowStatusText(msg);
                     }
                 }
             }
@@ -1138,11 +1216,11 @@ namespace ConfigGenerator
             return result;
         }
 
-        /// <summary>
-        /// Получить тип блока данных по его наименованию
-        /// </summary>
-        /// <param name="type"></param>
-        /// <returns></returns>
+        // <summary>
+        // Получить тип блока данных по его наименованию
+        // </summary>
+        // <param name="type"></param>
+        // <returns></returns>
         // private DataBlockType GetDBType(string type)
         // {
         //     DataBlockType result;
@@ -1184,9 +1262,7 @@ namespace ConfigGenerator
 
         #endregion
 
-        #region Обработка меню Визуализация
-
-        #endregion
+        #region Обработка меню Визуализации
 
         /// <summary>
         /// Обработка нажатия на кнопку Редактировать выбранный рольганг
@@ -1208,5 +1284,15 @@ namespace ConfigGenerator
             _logger.Info("Щелчек по кнопке Удалить рольганг");
         }
         
+        #endregion
+
+        /// <summary>
+        /// Вывести сообщение в строке состояния
+        /// </summary>
+        /// <param name="message"></param>
+        private void ShowStatusText(string message)
+        {
+            StatusText.Text = message;
+        }
     }
 }

@@ -603,7 +603,6 @@ namespace ConfigGenerator
         {
             AddDataBlock addDataBlock = new AddDataBlock();
 
-            addDataBlock.Mode = FormMode.Add;
             addDataBlock.ShowDialog();
             if (addDataBlock.Result == DialogResult.OK)
             {
@@ -635,7 +634,6 @@ namespace ConfigGenerator
             }
 
             DataBlockUnit dataBlock = _configuration.FindDataBlock(uid);
-            addDataBlock.Mode = FormMode.Edit;
             addDataBlock.DataBlock = dataBlock;
             
 

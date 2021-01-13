@@ -102,6 +102,7 @@ namespace ConfigGenerator.Forms
                 }
 
                 comboDataBlock.Enabled = false;
+                checkVirtual.Enabled = !_virtualOnly;
 
                 comboType.Text = signal.Type.ToString();
                 textUid.Text = signal.Uid.ToString();

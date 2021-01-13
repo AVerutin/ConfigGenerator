@@ -10,14 +10,12 @@ namespace ConfigGenerator.Forms
     {
         public DataBlockUnit DataBlock { get; set; }
         public DialogResult Result { get; private set; }
-        public FormMode Mode { get; set; }
         
         public AddDataBlock()
         {
             InitializeComponent();
             DataBlock = null;
             Result = DialogResult.None;
-            Mode = FormMode.Add;
             comboType.SelectedIndex = 0;
         }
 
@@ -74,12 +72,13 @@ namespace ConfigGenerator.Forms
 
         public void EditDataBlock()
         {
-            if (Mode == FormMode.Edit && DataBlock != null)
+            if (DataBlock != null)
             {
                 textUid.Text = DataBlock.Uid.ToString();
                 textName.Text = DataBlock.Name;
                 textPort.Text = DataBlock.Port.ToString();
                 textServer.Text = DataBlock.ServerName;
+                textPath.Text = DataBlock.ServerPath;
                 textBlockSize.Text = DataBlock.DataBlockSize.ToString();
                 textSenderIp.Text = DataBlock.SenderHost;
                 textSenderPort.Text = DataBlock.SenderPort.ToString();
